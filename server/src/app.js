@@ -8,6 +8,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const authRoutes = require("./routes/auth.routes");
+
 // Health check route
 app.get("/health", (req, res) => {
   res.json({ status: "ok", message: "BudgetTrack API is running" });
@@ -18,3 +20,5 @@ const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
+
+app.use("/api/auth", authRoutes);
