@@ -18,6 +18,8 @@ app.get("/health", (req, res) => {
 
 // Auth routes
 app.use("/api/auth", authRoutes);
+const transactionRoutes = require("./routes/transactions.routes");
+app.use("/api/transactions", transactionRoutes);
 
 // Protected test route
 app.get("/api/me", requireAuth, (req, res) => {

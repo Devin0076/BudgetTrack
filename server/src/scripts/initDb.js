@@ -4,11 +4,16 @@ const fs = require("fs");
 const pool = require("../db");
 
 async function run() {
-  const sqlPath = path.join(__dirname, "../../sql/001_create_users.sql");
-  const sql = fs.readFileSync(sqlPath, "utf8");
+  const usersSqlPath = path.join(__dirname, "../../sql/001_create_users.sql");
+  const txSqlPath = path.join(__dirname, "../../sql/002_create_transactions.sql");
 
-  await pool.query(sql);
-  console.log("Database initialized. Users table created.");
+  const usersSql = fs.readFileSync(usersSqlPath, "utf8");
+  const txSql = fs.readFileSync(txSqlPath, "utf8");
+
+  await pool.query(usersSql);
+  await pool.query(txSql);
+
+  console.log("Database initialized. Users and transactions tables created.");
   process.exit(0);
 }
 
