@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon src/app.js",
     "start": "node src/app.js",
-    "test": "echo \"No tests yet\""
+    "test": "jest --runInBand --forceExit"
   },
   "repository": {
     "type": "git",
@@ -28,6 +28,8 @@
     "pg": "^8.18.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "jest": "^30.2.0",
+    "nodemon": "^3.1.14",
+    "supertest": "^7.2.2"
   }
 }
