@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 
 const authRoutes = require("./routes/auth.routes");
 const { requireAuth } = require("./middleware/auth.middleware");
@@ -24,6 +25,15 @@ app.use("/api/transactions", transactionRoutes);
 // Protected test route
 app.get("/api/me", requireAuth, (req, res) => {
   res.json({ userId: req.userId });
+});
+
+
+const clientPath = path.join(__dirname, "../../client");
+
+app.use(express.static(clientPath));
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(clientPath, "index.html"));
 });
 
 const PORT = process.env.PORT || 3001;
