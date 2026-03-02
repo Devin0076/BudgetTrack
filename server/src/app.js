@@ -1,5 +1,10 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
+
+const authRoutes = require("./routes/auth.routes");
+const { requireAuth } = require("./middleware/auth.middleware");
 
 const app = express();
 
@@ -12,8 +17,31 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok", message: "BudgetTrack API is running" });
 });
 
+// Auth routes
+app.use("/api/auth", authRoutes);
+const transactionRoutes = require("./routes/transactions.routes");
+app.use("/api/transactions", transactionRoutes);
+
+// Protected test route
+app.get("/api/me", requireAuth, (req, res) => {
+  res.json({ userId: req.userId });
+});
+
+
+const clientPath = path.join(__dirname, "../../client");
+
+app.use(express.static(clientPath));
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(clientPath, "index.html"));
+});
+
 const PORT = process.env.PORT || 3001;
 
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server listening on port ${PORT}`);
+  });
+}
+
+module.exports = app;
