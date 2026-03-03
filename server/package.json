@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon src/app.js",
     "start": "node src/app.js",
-    "test": "jest --runInBand --forceExit"
+    "test": "cross-env NODE_ENV=test jest --runInBand --forceExit"
   },
   "repository": {
     "type": "git",
