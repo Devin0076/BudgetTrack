@@ -60,6 +60,45 @@ describe("Transactions endpoints", () => {
     expect(Array.isArray(res.body.transactions)).toBe(true);
     expect(res.body.transactions.length).toBeGreaterThan(0);
   });
+
+    it("rejects requests with no auth token", async () => {
+    const res = await request(app).get("/api/transactions");
+
+    expect(res.statusCode).toBe(401);
+    expect(res.body.error).toBeDefined();
+  });
+
+  it("rejects creating a transaction with missing fields", async () => {
+    const token = await registerAndLogin();
+
+    const res = await request(app)
+      .post("/api/transactions")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        amount: 10,
+        // missing category, type, date
+      });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toBe("Missing required fields");
+  });
+
+  it("rejects creating a transaction with invalid type", async () => {
+    const token = await registerAndLogin();
+
+    const res = await request(app)
+      .post("/api/transactions")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        amount: 10,
+        category: "Food",
+        type: "badtype",
+        date: "2026-02-23",
+      });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toBe("Type must be income or expense");
+  });
 });
 
 afterAll(async () => {
