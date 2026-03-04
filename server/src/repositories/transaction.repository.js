@@ -42,9 +42,25 @@ async function deleteTransaction(userId, transactionId) {
   return result.rows[0];
 }
 
+
+async function getTransactionsByUserAndMonth(userId, month) {
+  // month = "YYYY-MM"
+  const result = await pool.query(
+    `SELECT id, user_id, amount, category, type, date, description
+     FROM transactions
+     WHERE user_id = $1
+       AND to_char(date, 'YYYY-MM') = $2
+     ORDER BY date DESC, id DESC`,
+    [userId, month]
+  );
+
+  return result.rows;
+}
+
 module.exports = {
   createTransaction,
   getTransactionsByUser,
   updateTransaction,
   deleteTransaction,
+  getTransactionsByUserAndMonth,
 };

@@ -5,6 +5,7 @@ const cors = require("cors");
 
 const authRoutes = require("./routes/auth.routes");
 const { requireAuth } = require("./middleware/auth.middleware");
+const analyticsRoutes = require("./routes/analytics.routes");
 
 const app = express();
 
@@ -21,6 +22,8 @@ app.get("/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 const transactionRoutes = require("./routes/transactions.routes");
 app.use("/api/transactions", transactionRoutes);
+
+app.use("/api/analytics", analyticsRoutes);
 
 // Protected test route
 app.get("/api/me", requireAuth, (req, res) => {
