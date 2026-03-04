@@ -11,6 +11,7 @@
   <input id="password" type="password" placeholder="Password" />
   <button onclick="register()">Register</button>
   <button onclick="login()">Login</button>
+  <button onclick="logout()">Logout</button>
 
   <h2>Create Transaction</h2>
   <input id="amount" placeholder="Amount" />
@@ -28,10 +29,22 @@
   <ul id="transactions"></ul>
 
   <script>
-    let token = null;
+    // Persist token across refresh
+    let token = localStorage.getItem("token");
+
+    function setToken(newToken) {
+      token = newToken;
+      if (newToken) localStorage.setItem("token", newToken);
+      else localStorage.removeItem("token");
+    }
+
+    function logout() {
+      setToken(null);
+      alert("Logged out");
+    }
 
     async function register() {
-      const email = document.getElementById("email").value;
+      const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
 
       const res = await fetch("/api/auth/register", {
@@ -40,12 +53,18 @@
         body: JSON.stringify({ email, password })
       });
 
-      const data = await res.json();
-      alert(JSON.stringify(data));
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        alert(`Register failed (${res.status}): ` + (data.error || "Unknown error"));
+        return;
+      }
+
+      alert("Registered! Now click Login.");
     }
 
     async function login() {
-      const email = document.getElementById("email").value;
+      const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
 
       const res = await fetch("/api/auth/login", {
@@ -54,17 +73,35 @@
         body: JSON.stringify({ email, password })
       });
 
-      const data = await res.json();
-      token = data.token;
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setToken(null);
+        alert(`Login failed (${res.status}): ` + (data.error || "Unknown error"));
+        return;
+      }
+
+      if (!data.token) {
+        setToken(null);
+        alert("Login response missing token. Check server /api/auth/login response.");
+        return;
+      }
+
+      setToken(data.token);
       alert("Logged in");
     }
 
     async function createTransaction() {
+      if (!token) {
+        alert("You must login first (no token).");
+        return;
+      }
+
       const amount = document.getElementById("amount").value;
-      const category = document.getElementById("category").value;
+      const category = document.getElementById("category").value.trim();
       const type = document.getElementById("type").value;
       const date = document.getElementById("date").value;
-      const description = document.getElementById("description").value;
+      const description = document.getElementById("description").value.trim();
 
       const res = await fetch("/api/transactions", {
         method: "POST",
@@ -75,23 +112,42 @@
         body: JSON.stringify({ amount, category, type, date, description })
       });
 
-      const data = await res.json();
-      alert(JSON.stringify(data));
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        // If token is bad, clear it so you don’t stay stuck
+        if (res.status === 401) setToken(null);
+        alert(`Create failed (${res.status}): ` + (data.error || "Unknown error"));
+        return;
+      }
+
+      alert("Transaction added");
     }
 
     async function loadTransactions() {
+      if (!token) {
+        alert("You must login first (no token).");
+        return;
+      }
+
       const res = await fetch("/api/transactions", {
         headers: {
           "Authorization": "Bearer " + token
         }
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        if (res.status === 401) setToken(null);
+        alert(`Load failed (${res.status}): ` + (data.error || "Unknown error"));
+        return;
+      }
 
       const list = document.getElementById("transactions");
       list.innerHTML = "";
 
-      data.transactions.forEach(tx => {
+      (data.transactions || []).forEach(tx => {
         const li = document.createElement("li");
         li.textContent = `${tx.category} - ${tx.amount} (${tx.type})`;
         list.appendChild(li);
