@@ -5,6 +5,7 @@ const cors = require("cors");
 
 const authRoutes = require("./routes/auth.routes");
 const { requireAuth } = require("./middleware/auth.middleware");
+const { errorHandler } = require("./middleware/error.middleware");
 const analyticsRoutes = require("./routes/analytics.routes");
 
 const app = express();
@@ -46,5 +47,7 @@ if (require.main === module) {
     console.log(`Server listening on port ${PORT}`);
   });
 }
+
+app.use(errorHandler);
 
 module.exports = app;

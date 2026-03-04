@@ -1,18 +1,19 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { createUser, findUserByEmail } = require("../models/user.model");
+const AppError = require("../errors/AppError");
 
-async function register(req, res) {
+async function register(req, res, next) {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required" });
+      return next(new AppError("Email and password are required", 400));
     }
 
     const existing = await findUserByEmail(email);
     if (existing) {
-      return res.status(409).json({ error: "Email is already registered" });
+      return next(new AppError("Email is already registered", 409));
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -21,27 +22,27 @@ async function register(req, res) {
     return res.status(201).json({ user });
   } catch (err) {
     console.error("Register error:", err);
-    return res.status(500).json({ error: "Internal server error" });
+    return next(new AppError("Internal server error", 500));
   }
 }
 
 
-async function login(req, res) {
+async function login(req, res, next) {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required" });
+      return next(new AppError("Email and password are required", 400));
     }
 
     const user = await findUserByEmail(email);
     if (!user) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      return next(new AppError("Invalid credentials", 401));
     }
 
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      return next(new AppError("Invalid credentials", 401));
     }
 
     const token = jwt.sign(
@@ -51,9 +52,9 @@ async function login(req, res) {
     );
 
     return res.json({ token });
-  } catch (err) {
+    } catch (err) {
     console.error("Login error:", err);
-    return res.status(500).json({ error: "Internal server error" });
+    return next(new AppError("Internal server error", 500));
   }
 }
 

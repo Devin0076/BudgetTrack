@@ -1,3 +1,4 @@
+const AppError = require("../errors/AppError");
 const {
   createTransaction,
   getTransactionsByUser,
@@ -5,22 +6,22 @@ const {
   deleteTransaction,
 } = require("../models/transaction.model");
 
-async function create(req, res) {
+async function create(req, res, next) {
   try {
     const userId = req.userId;
     const { amount, category, type, date, description } = req.body;
 
     if (amount === undefined || !category || !type || !date) {
-      return res.status(400).json({ error: "Missing required fields" });
+      return next(new AppError("Missing required fields", 400));
     }
 
     const parsedAmount = Number(amount);
     if (Number.isNaN(parsedAmount)) {
-      return res.status(400).json({ error: "Amount must be a number" });
+      return next(new AppError("Amount must be a number", 400));
     }
 
     if (type !== "income" && type !== "expense") {
-      return res.status(400).json({ error: "Type must be income or expense" });
+      return next(new AppError("Type must be income or expense", 400));
     }
 
     const tx = await createTransaction(
@@ -35,43 +36,42 @@ async function create(req, res) {
     return res.status(201).json({ transaction: tx });
   } catch (err) {
     console.error("Create transaction error:", err);
-    return res.status(500).json({ error: "Internal server error" });
+    return next(new AppError("Internal server error", 500));
   }
 }
 
-async function list(req, res) {
+async function list(req, res, next) {
   try {
     const userId = req.userId;
     const transactions = await getTransactionsByUser(userId);
     return res.json({ transactions });
   } catch (err) {
     console.error("List transactions error:", err);
-    return res.status(500).json({ error: "Internal server error" });
+    return next(new AppError("Internal server error", 500));
   }
 }
 
-
-async function update(req, res) {
+async function update(req, res, next) {
   try {
     const userId = req.userId;
     const transactionId = Number(req.params.id);
     const { amount, category, type, date, description } = req.body;
 
     if (!transactionId) {
-      return res.status(400).json({ error: "Invalid transaction id" });
+      return next(new AppError("Invalid transaction id", 400));
     }
 
     if (amount === undefined || !category || !type || !date) {
-      return res.status(400).json({ error: "Missing required fields" });
+      return next(new AppError("Missing required fields", 400));
     }
 
     const parsedAmount = Number(amount);
     if (Number.isNaN(parsedAmount)) {
-      return res.status(400).json({ error: "Amount must be a number" });
+      return next(new AppError("Amount must be a number", 400));
     }
 
     if (type !== "income" && type !== "expense") {
-      return res.status(400).json({ error: "Type must be income or expense" });
+      return next(new AppError("Type must be income or expense", 400));
     }
 
     const updated = await updateTransaction(
@@ -85,37 +85,36 @@ async function update(req, res) {
     );
 
     if (!updated) {
-      return res.status(404).json({ error: "Transaction not found" });
+      return next(new AppError("Transaction not found", 404));
     }
 
     return res.json({ transaction: updated });
   } catch (err) {
     console.error("Update transaction error:", err);
-    return res.status(500).json({ error: "Internal server error" });
+    return next(new AppError("Internal server error", 500));
   }
 }
 
-async function remove(req, res) {
+async function remove(req, res, next) {
   try {
     const userId = req.userId;
     const transactionId = Number(req.params.id);
 
     if (!transactionId) {
-      return res.status(400).json({ error: "Invalid transaction id" });
+      return next(new AppError("Invalid transaction id", 400));
     }
 
     const deleted = await deleteTransaction(userId, transactionId);
 
     if (!deleted) {
-      return res.status(404).json({ error: "Transaction not found" });
+      return next(new AppError("Transaction not found", 404));
     }
 
     return res.json({ deleted: true, id: deleted.id });
   } catch (err) {
     console.error("Delete transaction error:", err);
-    return res.status(500).json({ error: "Internal server error" });
+    return next(new AppError("Internal server error", 500));
   }
 }
-
 
 module.exports = { create, list, update, remove };
